@@ -2,7 +2,7 @@
 
 # Uzz
 # ---
-# Copyright (C) 2023 Stefano Fornari. Licensed under the
+# Copyright (C) 2024 Stefano Fornari. Licensed under the
 # EUPL-1.2 or later (see LICENSE).
 #
 # All Rights Reserved.  No use, copying or distribution of this
@@ -52,4 +52,4 @@ export MICRONAUT_CONFIG_FILES=$home/config/application.properties
 JAVA_OPTS="$JAVA_OPTS -Duzz.config=$home/config"
 
 exec 2>&1
-exec $uidcmd "$javacmd" $JAVA_OPTS ste.uzz.api.Application "$@"
+exec $uidcmd "$javacmd" $JAVA_OPTS ste.acme.cli.AcmeCLI "$@"

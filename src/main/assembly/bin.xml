@@ -11,6 +11,12 @@
 
     <includeBaseDirectory>false</includeBaseDirectory>
 
+    <dependencySets>
+        <dependencySet>
+            <outputDirectory>lib</outputDirectory>
+        </dependencySet>
+    </dependencySets>
+
     <fileSets>
         <fileSet>
             <outputDirectory></outputDirectory>
@@ -36,13 +42,6 @@
             <excludes>
                 <exclude>*.formatted</exclude>
             </excludes>
-        </fileSet>
-        <fileSet>
-            <outputDirectory>lib</outputDirectory>
-            <directory>target</directory>
-            <includes>
-                <include>${project.artifactId}-${project.version}.jar</include>
-            </includes>
         </fileSet>
     </fileSets>
 </assembly>
