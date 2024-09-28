@@ -1,0 +1,6 @@
+{
+    "responseQueue": [
+        "updateOrderResponse", "updateOrderResponseValid",
+        "updateOrderResponse", "updateOrderResponseValid"
+    ]
+}

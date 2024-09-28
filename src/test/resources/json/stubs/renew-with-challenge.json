@@ -1,0 +1,7 @@
+{
+    "responseQueue": [
+        "updateOrderResponse", "updateOrderResponse",
+        "authorizationResponse1", "triggerHttpChallengeResponse", "authorizationResponseValid",
+        "updateOrderResponseValid", "updateOrderResponseValid", "updateOrderResponseValid"
+    ]
+}

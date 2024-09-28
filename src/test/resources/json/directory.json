@@ -1,0 +1,20 @@
+{
+    "https://cacert1.com": {
+        "newNonce"    : "https://cacert1.com/NEW_NONCE",
+        "newAccount"  : "https://cacert1.com/NEW_ACCOUNT",
+        "newOrder"    : "https://cacert1.com/NEW_ORDER",
+        "newAuthz"    : "https://cacert1.com/NEW_AUTHZ",
+        "revokeCert"  : "https://cacert1.com/REVOKE_CERT",
+        "keyChange"   : "https://cacert1.com/KEY_CHANGE",
+        "renewalInfo" : "https://cacert1.com/RENEWAL_INFO"
+    },
+    "https://cacert2.com": {
+        "newNonce"    : "https://cacert2.com/NEW_NONCE",
+        "newAccount"  : "https://cacert2.com/NEW_ACCOUNT",
+        "newOrder"    : "https://cacert2.com/NEW_ORDER",
+        "newAuthz"    : "https://cacert2.com/NEW_AUTHZ",
+        "revokeCert"  : "https://cacert2.com/REVOKE_CERT",
+        "keyChange"   : "https://cacert2.com/KEY_CHANGE",
+        "enewalInfo" : "https://cacert2.com/RENEWAL_INFO"
+    }
+}

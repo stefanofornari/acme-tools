@@ -1,0 +1,6 @@
+{
+  "type": "http-01",
+  "url": "https://cacert1.com/AUTHZ/1234",
+  "status": "pending",
+  "token": "rSoI9JpyvFi-ltdnBW0W1DjKstzG7cHixjzcOjwzAEQ"
+}

@@ -1,0 +1,13 @@
+{
+    "identifier":
+    {
+        "type": "ip",
+        "value": "cacert1.com"
+    },
+    "status": "pending",
+    "challenges": [
+        {
+          "token": "IlirfxKKXAsHtmzK29Pj8A"
+        }
+    ]
+}

@@ -1,0 +1,83 @@
+#!/bin/bash
+
+#
+# Copyright Stefano Fornari (C) 2013. All rights reserved.
+#
+
+set_java() {
+  #
+  # If JAVA_HOME points to a jdk, it is taken to launch the client, it the java
+  # command in the path is used.
+  #
+  javacmd="bin/java"
+
+  if [ ! -f "$JAVA_HOME/$javacmd" ]
+  then
+      javacmd="java"
+  fi
+
+  if [ -f "$JAVA_HOME/$javacmd" ]
+  then
+      javacmd="$JAVA_HOME"/$javacmd
+  fi
+}
+
+#
+# Parameters:
+#
+# 1. directory to scan for jars
+# 2. main artifact prefix
+#
+set_classpath() {
+  #
+  # if the provided dir does not exist there is nothing to do
+  #
+  if [ ! -d "$1" ]
+  then
+    return
+  fi
+
+  # Setting classpath
+  cd "$1"
+  for jarfile in *.jar
+  do
+    if [ "${jarfile#$2}" != "$jarfile" ]
+    then
+      MAINJAR=$jarfile;
+    else
+      CP="$1/$jarfile":$CP;
+    fi
+  done
+
+  export CLASSPATH=$1/$MAINJAR:$CLASSPATH:$CP
+  case $(uname) in
+    CYGWIN*)
+      export CLASSPATH=$(cygpath -wp "$CLASSPATH")
+      ;;
+  esac
+}
+
+set_logging() {
+  #
+  # set Java logging if the configuration file is available
+  #
+  if [ -f "$home/bin/$scriptname-logging.properties" ]
+  then
+    logging_config_file="$home/bin/$scriptname-logging.properties"
+    case $(uname) in
+      CYGWIN*)
+        logging_config_file=$(cygpath -w "$logging_config_file")
+        ;;
+    esac
+  fi
+}
+
+#
+# loads (if it exists) a configuration file named conf/$1.conf
+#
+load_config() {
+  if [ -f "conf/$1.conf" ]
+  then
+    . "conf/$1.conf"
+  fi
+}

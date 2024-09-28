@@ -1,0 +1,8 @@
+{
+    "identifier":
+    {
+        "type": "http-01",
+        "value": "cacert1.com"
+    },
+    "status": "valid"
+}
