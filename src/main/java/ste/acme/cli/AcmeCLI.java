@@ -48,7 +48,9 @@ import org.shredzone.acme4j.exception.AcmeException;
 import org.shredzone.acme4j.util.KeyPairUtils;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.IExecutionExceptionHandler;
 import picocli.CommandLine.Mixin;
+import picocli.CommandLine.ParseResult;
 
 /**
  *
@@ -74,12 +76,22 @@ public class AcmeCLI {
     @CommandLine.Option(names = Constants.OPT_VERSION, versionHelp = true, description = "show version information")
     private boolean printVersion;
 
-    public static void main(String... args) throws Exception {
-        new CommandLine(new AcmeCLI()).execute(args);
+    public static void main(String... args) {
+        try {
+            new CommandLine(new AcmeCLI())
+                .setExecutionExceptionHandler(new CLIExceptionHandler())
+                .execute(args);
+        } catch (Throwable x) {
+            System.out.println("Something went wrong: " + x.getMessage());
+            //
+            // TODO: move it to the log
+            //
+            x.printStackTrace();
+        }
     }
 
     @Command(name = "renew", description = "renew a previously created certificate")
-    private void renew(
+    protected void renew(
             @Mixin AcmePreferences preferences,
             @CommandLine.Parameters(
                 arity = "1",
@@ -229,7 +241,7 @@ public class AcmeCLI {
 
     // ---------------------------------------------------------AcmeToolsVersion
 
-    public static class AcmeToolsVersion implements CommandLine.IVersionProvider {
+    protected static class AcmeToolsVersion implements CommandLine.IVersionProvider {
 
         @CommandLine.Spec
         CommandLine.Model.CommandSpec spec; // injected by picocli
@@ -253,4 +265,16 @@ public class AcmeCLI {
             return p.getProperty("version", "N/A");
         }
     }
+
+    // ----------------------------------------------------- CLIExceptionHandler
+
+    protected static class CLIExceptionHandler implements IExecutionExceptionHandler {
+        @Override
+        public int handleExecutionException(Exception x, CommandLine commandLine, ParseResult parseResult) {
+            System.out.println("Something went wrong: " + x.getMessage());
+            x.printStackTrace();
+            return commandLine.getCommandSpec().exitCodeOnExecutionException();
+        }
+    }
+
 }
