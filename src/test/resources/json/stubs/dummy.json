@@ -1,5 +1,7 @@
 {
     "responseQueue": [
-        "dummyResponse"
+        { "status": 200, "resource": "updateAccountResponse" },
+        { "status": 201, "resource": "requestOrderResponse" },
+        { "status": 400, "resource": "loginError" }
     ]
 }
