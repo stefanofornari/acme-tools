@@ -48,7 +48,7 @@ public class AcmeProviderStub implements AcmeProvider {
     public static final String SCHEME = "acmetest";
 
     protected final JSON config;
-    protected final Deque<String> responseQueue = new ArrayDeque();
+    protected final Deque<AcmeResponseStub> responseQueue = new ArrayDeque();
 
 
     public AcmeProviderStub() {
@@ -56,11 +56,11 @@ public class AcmeProviderStub implements AcmeProvider {
         config = TestUtils.getJSON("directory");
     }
 
-    public Collection<String> responses() {
+    public Collection<AcmeResponseStub> responses() {
         return responseQueue;
     }
 
-    public AcmeProviderStub withResponses(String... responses) {
+    public AcmeProviderStub withResponses(AcmeResponseStub... responses) {
         responseQueue.clear(); responseQueue.addAll(List.of(responses));
 
         return this;
@@ -110,8 +110,11 @@ public class AcmeProviderStub implements AcmeProvider {
             // we have a subscheme
             //
             JSON stubs = TestUtils.getJSON("stubs/" + schemeSpecific.substring(0, pos));
-                stubs.get("responseQueue").asArray().forEach((stub) -> {
-                    responseQueue.offer(stub.asString());
+            stubs.get("responseQueue").asArray().forEach((stub) -> {
+                JSON response = stub.asObject();
+                responseQueue.offer(
+                    new AcmeResponseStub(response.get("status").asInt(), response.get("resource").asString())
+                );
             });
         }
 

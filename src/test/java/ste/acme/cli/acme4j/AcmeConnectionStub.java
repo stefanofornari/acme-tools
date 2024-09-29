@@ -14,6 +14,8 @@
 package ste.acme.cli.acme4j;
 
 import java.io.IOException;
+import static java.net.HttpURLConnection.HTTP_CREATED;
+import static java.net.HttpURLConnection.HTTP_OK;
 import java.net.URL;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
@@ -25,9 +27,11 @@ import java.util.List;
 import java.util.Optional;
 
 import org.shredzone.acme4j.Login;
+import org.shredzone.acme4j.Problem;
 import org.shredzone.acme4j.Session;
 import org.shredzone.acme4j.connector.Connection;
 import org.shredzone.acme4j.exception.AcmeException;
+import org.shredzone.acme4j.exception.AcmeServerException;
 import org.shredzone.acme4j.toolbox.JSON;
 import org.shredzone.acme4j.toolbox.JSONBuilder;
 
@@ -43,13 +47,13 @@ public class AcmeConnectionStub implements Connection {
     private static final String ACMESTUB_NONCE = "anonce";
 
     private final URL locationUrl;
-    private final String resource;
+    private final AcmeResponseStub response;
 
-    public AcmeConnectionStub(final URL locationUrl, final String resource) {
+    public AcmeConnectionStub(final URL locationUrl, final AcmeResponseStub response) {
         this.locationUrl = locationUrl;
-        this.resource = resource;
+        this.response = response;
 
-        System.out.println("new connection for " + locationUrl + " with resource " + resource);
+        System.out.println("new connection for " + locationUrl + " with resource " + response);
     }
 
     @Override
@@ -58,8 +62,14 @@ public class AcmeConnectionStub implements Connection {
     }
 
     @Override
-    public int sendRequest(URL url, Session session, ZonedDateTime ifModifiedSince) {
-        return 200;
+    public int sendRequest(URL url, Session session, ZonedDateTime ifModifiedSince) throws AcmeServerException {
+        int status = response.status();
+        if (status != HTTP_OK && status != HTTP_CREATED) {
+            throw new AcmeServerException(
+                new Problem(TestUtils.getJSON(response.resource()), url)
+            );
+        }
+        return response.status();
     }
 
     @Override
@@ -91,7 +101,8 @@ public class AcmeConnectionStub implements Connection {
 
     @Override
     public JSON readJsonResponse() {
-        return TestUtils.getJSON(resource);
+        final JSON json = TestUtils.getJSON(response.resource());
+        return json;
     }
 
     @Override
@@ -145,8 +156,8 @@ public class AcmeConnectionStub implements Connection {
     private int performRequest(URL url, JSONBuilder claims, Session session,
         KeyPair keypair, URL accountLocation, String accept)
     throws AcmeException {
-        System.out.println("performRequest " + url + " with session " + session);
-        return 200;
+        System.out.printf("performRequest %s with session %s will respond %s\n", url, session.toString(), response);
+        return response.status();
     }
 
 }

@@ -1,6 +1,7 @@
 {
     "responseQueue": [
-        "updateOrderResponse", "updateOrderResponseValid",
-        "updateOrderResponse", "updateOrderResponseValid"
+        { "status": 200, "resource": "updateOrderResponse" }, { "status": 200, "resource": "updateOrderResponseValid" },
+        { "status": 200, "resource": "updateOrderResponse" }, { "status": 200, "resource": "updateOrderResponseValid" },
+        { "status": 200, "resource": "updateOrderResponseValid" }
     ]
 }

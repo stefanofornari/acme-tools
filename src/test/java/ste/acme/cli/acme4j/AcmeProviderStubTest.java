@@ -32,6 +32,7 @@ import org.shredzone.acme4j.Order;
 import org.shredzone.acme4j.Session;
 import org.shredzone.acme4j.Status;
 import org.shredzone.acme4j.challenge.Http01Challenge;
+import org.shredzone.acme4j.exception.AcmeServerException;
 import org.shredzone.acme4j.provider.AcmeProvider;
 import static org.shredzone.acme4j.toolbox.AcmeUtils.base64UrlEncode;
 import org.shredzone.acme4j.toolbox.JSON;
@@ -84,13 +85,16 @@ public class AcmeProviderStubTest {
     @Test
     public void withResponses_stores_responses() {
         final AcmeProviderStub S = new AcmeProviderStub();
+        final AcmeResponseStub R1 = new AcmeResponseStub(100, "res1");
+        final AcmeResponseStub R2 = new AcmeResponseStub(200, "res2");
+        final AcmeResponseStub R3 = new AcmeResponseStub(300, "res3");
 
         then(S.responses()).isEmpty();
 
-        then(S.withResponses("res1")).isSameAs(S);
-        then(S.responses()).containsExactly("res1");
-        S.withResponses("res2", "res3");
-        then(S.responses()).containsExactly("res2", "res3");
+        then(S.withResponses(R1)).isSameAs(S);
+        then(S.responses()).containsExactly(R1);
+        S.withResponses(R2, R3);
+        then(S.responses()).containsExactly(R2, R3);
     }
 
     @Test
@@ -109,8 +113,10 @@ public class AcmeProviderStubTest {
         then(order).isNotNull();
         then(order.getStatus()).isEqualTo(Status.PENDING);
 
+        System.out.println("CHECK1");
         while (!EnumSet.of(Status.VALID, Status.INVALID).contains(order.getStatus())) {
             Thread.sleep(100);
+            System.out.println("CHECK2");
             order.fetch();
         }
 
@@ -130,12 +136,13 @@ public class AcmeProviderStubTest {
 
         p = (AcmeProviderStub)new Session("acmetest:renew://cacert1.com").provider();
         then(p.responseQueue).containsExactly(
-            "updateOrderResponse", "updateOrderResponseValid",
-            "updateOrderResponse", "updateOrderResponseValid"
+            new AcmeResponseStub(200, "updateOrderResponse"), new AcmeResponseStub(200, "updateOrderResponseValid"),
+            new AcmeResponseStub(200, "updateOrderResponse"), new AcmeResponseStub(200, "updateOrderResponseValid"),
+            new AcmeResponseStub(200, "updateOrderResponseValid")
         );
 
         p = (AcmeProviderStub)new Session("acmetest:dummy://cacert1.com").provider();
-        then(p.responseQueue).containsExactly("dummyResponse");
+        then(p.responseQueue).containsExactly(new AcmeResponseStub(500, "dummyResponse"));
     }
 
     @Test
@@ -166,5 +173,25 @@ public class AcmeProviderStubTest {
         then(C.getAuthorization()).isEqualTo(
             TOKEN + '.' + base64UrlEncode(JoseUtils.thumbprint(L.getKeyPair().getPublic()))
         );
+    }
+
+    @Test
+    public void send_request_sequence() throws Exception {
+        final Session S = new Session("acmetest:dummy://cacert1.com");
+        final AcmeProviderStub P = (AcmeProviderStub)S.provider();
+
+        AcmeConnectionStub C = (AcmeConnectionStub)P.connect(S.getServerUri(), null);
+        then(C.sendRequest(URI.create("https://cacert1.com/dummy/1").toURL(), S, null)).isEqualTo(200);
+        then(C.readJsonResponse().toMap()).containsExactlyEntriesOf(TestUtils.getJSON("updateAccountResponse").toMap());
+
+        C = (AcmeConnectionStub)P.connect(S.getServerUri(), null);
+        then(C.sendRequest(URI.create("https://cacert1.com/dummy/2").toURL(), S, null)).isEqualTo(201);
+        then(C.readJsonResponse().toMap()).containsExactlyEntriesOf(TestUtils.getJSON("requestOrderResponse").toMap());
+
+        AcmeConnectionStub C1 = (AcmeConnectionStub)P.connect(S.getServerUri(), null);
+        thenThrownBy(() -> {
+            C1.sendRequest(URI.create("https://cacert1.com/dummy/3").toURL(), S, null);
+        }).isInstanceOf(AcmeServerException.class)
+        .hasMessage("No account exists with the provided key");
     }
 }

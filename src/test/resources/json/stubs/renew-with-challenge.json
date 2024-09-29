@@ -1,7 +1,8 @@
 {
     "responseQueue": [
-        "updateOrderResponse", "updateOrderResponse",
-        "authorizationResponse1", "triggerHttpChallengeResponse", "authorizationResponseValid",
-        "updateOrderResponseValid", "updateOrderResponseValid", "updateOrderResponseValid"
+        { "status": 200, "resource": "updateOrderResponse" }, { "status": 200, "resource": "updateOrderResponse" },
+        { "status": 200, "resource": "authorizationResponse1" }, { "status": 200, "resource": "triggerHttpChallengeResponse" }, { "status": 200, "resource": "authorizationResponseValid" },
+        { "status": 200, "resource": "updateOrderResponseValid" }, { "status": 200, "resource": "updateOrderResponseValid" },
+        { "status": 200, "resource": "updateOrderResponseValid" }, { "status": 200, "resource": "updateOrderResponseValid" }
     ]
 }

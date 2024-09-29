@@ -1,0 +1,5 @@
+{
+    "type": "urn:ietf:params:acme:error:accountDoesNotExist",
+    "detail": "No account exists with the provided key",
+    "status": 400
+}
