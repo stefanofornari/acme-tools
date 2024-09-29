@@ -58,7 +58,7 @@
         <dependency>
             <groupId>com.github.stefanofornari</groupId>
             <artifactId>xtest</artifactId>
-            <version>3.6.2-SNAPSHOT</version>
+            <version>3.7.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
