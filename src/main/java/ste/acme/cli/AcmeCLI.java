@@ -81,7 +81,11 @@ public class AcmeCLI {
     @Command(name = "renew", description = "renew a previously created certificate")
     private void renew(
             @Mixin AcmePreferences preferences,
-            @CommandLine.Parameters(arity = "1", description = "ACME CA endpoint or URI e.g. https://someca.com, acme://example.org/staging") String endpoint
+            @CommandLine.Parameters(
+                arity = "1",
+                paramLabel = "<endpoint>",
+                description = "ACME CA endpoint or URI e.g. https://someca.com, acme://example.org/staging")
+            String endpoint
     ) throws IOException, AcmeException {
         Session session = new Session(endpoint);
 
