@@ -23,4 +23,5 @@ renew a previously created certificate
                               if not provided an available port will be picked
                               randomly
 ```
-Based on [acme4j](https://github.com/shred/acme4j)
+Based on [acme4j](https://github.com/shred/acme4j).
+[Find short URL for you CA here](https://shredzone.org/maven/acme4j/ca/index.html).
