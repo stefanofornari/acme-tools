@@ -27,14 +27,15 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
-import java.net.URL;
-import java.time.Duration;
-import java.time.Instant;
+import java.security.KeyPair;
+import java.security.Security;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.shredzone.acme4j.Account;
 import org.shredzone.acme4j.AccountBuilder;
 import org.shredzone.acme4j.Authorization;
 import org.shredzone.acme4j.Certificate;
@@ -45,6 +46,7 @@ import org.shredzone.acme4j.Status;
 import org.shredzone.acme4j.challenge.Http01Challenge;
 import org.shredzone.acme4j.connector.Resource;
 import org.shredzone.acme4j.exception.AcmeException;
+import org.shredzone.acme4j.provider.AcmeProvider;
 import org.shredzone.acme4j.util.KeyPairUtils;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -77,6 +79,7 @@ public class AcmeCLI {
     private boolean printVersion;
 
     public static void main(String... args) {
+        Security.addProvider(new BouncyCastleProvider());
         try {
             new CommandLine(new AcmeCLI())
                 .setExecutionExceptionHandler(new CLIExceptionHandler())
@@ -88,6 +91,53 @@ public class AcmeCLI {
             //
             x.printStackTrace();
         }
+    }
+
+    @Command(name = "new-account", description = "create a new account")
+    protected void newAccount(
+        @CommandLine.Parameters(
+            arity = "1",
+            paramLabel = "<endpoint>",
+            description = "ACME CA endpoint or URI e.g. https://someca.com, acme://example.org/staging")
+        String endpoint,
+        @CommandLine.Option(
+            names=Constants.OPT_ACCOUNT,
+            required=false,
+            description="optional account keys file",
+            defaultValue = Constants.DEFAULT_ACCOUNT_FILE)
+        File accountFile,
+        @CommandLine.Option(
+            names=Constants.OPT_CONTACT,
+            required=false,
+            description="optional contact email to provide to the CA"
+        )
+        String email
+    ) throws IOException, AcmeException {
+        Session session = new Session(endpoint);
+        AcmeProvider provider = session.provider();
+
+        System.out.println(
+            "Creating new account and credentials for " +
+            provider.resolve(session.getServerUri()) +
+            ((email != null) ? " with contact " + email : "")
+        );
+        System.out.println("Storing the new credentials in " + accountFile.getAbsolutePath());
+
+        KeyPair accountKeyPair = KeyPairUtils.createKeyPair();
+
+        AccountBuilder accountBuilder = new AccountBuilder()
+            .agreeToTermsOfService()
+            .useKeyPair(accountKeyPair);
+        if (email != null) {
+            accountBuilder.addEmail(email);
+        }
+
+        Account account = accountBuilder.create(session);
+        try (FileWriter fw = new FileWriter(accountFile)) {
+            KeyPairUtils.writeKeyPair(accountKeyPair, fw);
+        }
+
+        System.out.println("New account created with URL " + account.getLocation());
     }
 
     @Command(name = "renew", description = "renew a previously created certificate")
@@ -107,8 +157,6 @@ public class AcmeCLI {
                 .useKeyPair(KeyPairUtils.readKeyPair(new FileReader(preferences.account())))
                 .createLogin(session);
 
-        URL accountLocationUrl = login.getAccountLocation();
-
         System.out.println(session.getMetadata().getTermsOfService());
         System.out.println(session.getMetadata().getWebsite());
 
@@ -121,9 +169,8 @@ public class AcmeCLI {
         // TODO: fix domain and duration
         //
         Order order = login.newOrder()
-                .domain("example.org")
-                .notAfter(Instant.now().plus(Duration.ofDays(20L))) // optional
-                .create();
+            .domain("example.org")
+            .create();
 
         //
         // TODO: make it reactive

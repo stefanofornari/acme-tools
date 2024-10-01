@@ -142,7 +142,10 @@ public class AcmeProviderStubTest {
         );
 
         p = (AcmeProviderStub)new Session("acmetest:dummy://cacert1.com").provider();
-        then(p.responseQueue).containsExactly(new AcmeResponseStub(500, "dummyResponse"));
+        then(p.responseQueue).containsExactly(
+            new AcmeResponseStub(200, "updateAccountResponse"), new AcmeResponseStub(201, "requestOrderResponse"),
+            new AcmeResponseStub(400, "loginError")
+        );
     }
 
     @Test

@@ -39,4 +39,5 @@ public class Constants {
     public static final String OPT_POLLING_INTERVAL = "--polling-interval";
     public static final String OPT_PORT = "--port";
     public static final String OPT_CHALLENGE_TIMEOUT = "--challenge-timeout";
+    public static final String OPT_CONTACT = "--contact";
 }

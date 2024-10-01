@@ -37,6 +37,7 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.io.FileUtils;
@@ -247,7 +248,7 @@ public class AcmeCLIRenewTest extends BugFreeExec {
         then(response.body()).isNotBlank();
 
         final File cert = new File(HOME, "newcert.crt");
-        new WaitFor(5000, () -> { return cert.exists(); } );
+        P.waitFor(5, TimeUnit.SECONDS);
 
         then(out()).contains("Finalizing the order with the CA")
                    .contains("Order processed, getting the certificate")
@@ -263,8 +264,7 @@ public class AcmeCLIRenewTest extends BugFreeExec {
         // want to make sure the the server used for the challenge is properly
         // shut down.
         //
-        new WaitFor(5000, () -> { return !P.isAlive(); } );
-
+        P.waitFor(5, TimeUnit.SECONDS);
     }
 
     @Test
@@ -324,9 +324,9 @@ public class AcmeCLIRenewTest extends BugFreeExec {
         // want to make sure the the server used for the challenge is properly
         // shut down.
         //
-        new WaitFor(5000, () -> { return !P.isAlive(); } );
-
+        P.waitFor(5, TimeUnit.SECONDS);
     }
+
     @Test
     public void renew_with_challenge_timeout() throws Exception {
         //
@@ -346,8 +346,7 @@ public class AcmeCLIRenewTest extends BugFreeExec {
             "--challenge-timeout", "500ms"
         );
 
-        new WaitFor(5000, () -> { return !P.isAlive(); } );
-        //Thread.sleep(2000);
+        P.waitFor(5, TimeUnit.SECONDS);
 
         //System.out.println(err());
         //System.out.println(out());
@@ -369,9 +368,12 @@ public class AcmeCLIRenewTest extends BugFreeExec {
         //PEMParser pemParser = new PEMParser(new FileReader("/opt/uzz-api-0.0.1-SNAPSHOT/config/uzz.fornari.net.pem"));
         PEMParser pemParser = new PEMParser(new FileReader("/opt/uzz-api-0.0.1-SNAPSHOT/config/letsencrypt-8bca605269b3fe4e71909d77bf5d9a86.pem"));
         JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
-        Object object = pemParser.readObject();
-        KeyPair kp = converter.getKeyPair((PEMKeyPair) object);
+        PEMKeyPair object = (PEMKeyPair)pemParser.readObject();
+        System.out.println("prvate info: " + object.getPrivateKeyInfo().getAttributes());
+        System.out.println("public info: " + object.getPublicKeyInfo().getPublicKeyData());
+        KeyPair kp = converter.getKeyPair(object);
         PrivateKey privateKey = kp.getPrivate();
+
         System.out.println(privateKey);
         pemParser.close();
 
