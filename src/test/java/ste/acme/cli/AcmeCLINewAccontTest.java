@@ -84,10 +84,9 @@ public class AcmeCLINewAccontTest extends BugFreeExec {
         // We can invoke AcmeCLI directly as we pass absolute file names
         //
         final File PEM = new File(HOME, "account.pem");
-        AcmeCLI.main(
-            "new-account", "acmetest:new-account://cacert1.com",
-            Constants.OPT_ACCOUNT, PEM.getAbsolutePath(),
-            Constants.OPT_CONTACT, "someone@somewhere.com"
+        AcmeCLI.main("new-account", "acmetest:new-account://cacert1.com",
+            "--account-keys", PEM.getAbsolutePath(),
+            "--contact", "someone@somewhere.com"
         );
 
         then(OUT.getLog())

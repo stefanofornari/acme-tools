@@ -38,13 +38,13 @@ public class AcmePreferencesTest {
 
         AcmePreferences p = new AcmePreferences();
 
-        then(p.account()).isEqualTo(Constants.DEFAULT_ACCOUNT_FILE);
+        then(p.account()).isEqualTo(Constants.DEFAULT_ACCOUNT_KEYS);
         p.account(FILE); then(p.account()).isEqualTo(FILE);
 
-        then(p.domain()).isEqualTo(Constants.DEFAULT_DOMAIN_FILE);
+        then(p.domain()).isEqualTo(Constants.DEFAULT_DOMAIN_KEYS);
         p.domain(FILE); then(p.domain()).isEqualTo(FILE);
 
-        then(p.certificate()).isEqualTo(Constants.DEFAULT_CERTIFICATE_FILE);
+        then(p.certificate()).isEqualTo(Constants.DEFAULT_CERTIFICATE);
         p.certificate(FILE); then(p.certificate()).isEqualTo(FILE);
 
         then(p.pollingInterval()).isEqualTo(Integer.parseInt(Constants.DEFAULT_POLLING_INTERVAL));

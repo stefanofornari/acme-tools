@@ -36,14 +36,12 @@ public class AcmeCLITest extends BugFree {
 
     @Test
     public void show_error_messages_on_std_out() {
-        /*
         AcmeCLI.main("renew", "acme://somewhere");
         then(OUT.getLog()).contains("Something went wrong: No ACME provider found for acme://somewhere");
-        */
 
         OUT.clearLog();
-        //AcmeCLI.main("renew", "acmetest:account-error://cacert1.com", "--account", "src/test/data/default/account.pem");
-        AcmeCLI.main("renew", "acme://letsencrypt.org/staging", "--account", "/opt/uzz-api-0.0.1-SNAPSHOT/config/acme-account.pem");
+
+        AcmeCLI.main("renew", "acmetest:account-error://cacert1.com", "--account-keys", "src/test/data/default/account.pem");
         then(OUT.getLog()).contains("Something went wrong: No account exists with the provided key");
     }
 }

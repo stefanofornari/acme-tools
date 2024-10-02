@@ -25,16 +25,16 @@ package ste.acme.cli;
  *
  */
 public class Constants {
-    public static final String DEFAULT_ACCOUNT_FILE = "account.pem";
-    public static final String DEFAULT_DOMAIN_FILE = "domain.pem";
-    public static final String DEFAULT_CERTIFICATE_FILE = "domain.crt";
+    public static final String DEFAULT_ACCOUNT_KEYS = "account.pem";
+    public static final String DEFAULT_DOMAIN_KEYS = "domain.pem";
+    public static final String DEFAULT_CERTIFICATE = "domain.crt";
     public static final String DEFAULT_POLLING_INTERVAL = "3000";
     public static final String DEFAULT_CHALLENGE_TIMEOUT = "30s";
 
     public static final String OPT_HELP = "--help";
     public static final String OPT_VERSION = "--version";
-    public static final String OPT_ACCOUNT = "--account";
-    public static final String OPT_DOMAIN = "--domain";
+    public static final String OPT_ACCOUNT_KEYS = "--account-keys";
+    public static final String OPT_DOMAIN_KEYS = "--domain-keys";
     public static final String OPT_CERTIFICATE = "--certificate";
     public static final String OPT_POLLING_INTERVAL = "--polling-interval";
     public static final String OPT_PORT = "--port";

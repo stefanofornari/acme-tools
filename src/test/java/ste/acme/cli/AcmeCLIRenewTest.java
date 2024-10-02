@@ -99,7 +99,7 @@ public class AcmeCLIRenewTest extends BugFreeExec {
         exec(
             "java",
             AcmeCLI.class.getCanonicalName(), "renew", "acmetest:renew://cacert1.com",
-            "--account", "account2.pem"
+            "--account-keys", "account2.pem"
         );
 
         //System.out.println(err());
@@ -130,7 +130,7 @@ public class AcmeCLIRenewTest extends BugFreeExec {
         exec(
             "java",
             AcmeCLI.class.getCanonicalName(), "renew", "acmetest:renew://cacert1.com",
-            "--domain", "domain2.pem"
+            "--domain-keys", "domain2.pem"
         );
 
         then(out())
@@ -189,7 +189,7 @@ public class AcmeCLIRenewTest extends BugFreeExec {
         exec(
             "java",
             AcmeCLI.class.getCanonicalName(), "renew", "acmetest:renew://cacert1.com",
-            "--domain", "domain2.pem", "--account", "account2.pem", "--certificate", "newcert.crt"
+            "--domain-keys", "domain2.pem", "--account-keys", "account2.pem", "--certificate", "newcert.crt"
         );
 
         then(out())

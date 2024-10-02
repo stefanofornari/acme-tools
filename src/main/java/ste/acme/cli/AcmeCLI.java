@@ -101,10 +101,10 @@ public class AcmeCLI {
             description = "ACME CA endpoint or URI e.g. https://someca.com, acme://example.org/staging")
         String endpoint,
         @CommandLine.Option(
-            names=Constants.OPT_ACCOUNT,
+            names=Constants.OPT_ACCOUNT_KEYS,
             required=false,
             description="optional account keys file",
-            defaultValue = Constants.DEFAULT_ACCOUNT_FILE)
+            defaultValue = Constants.DEFAULT_ACCOUNT_KEYS)
         File accountFile,
         @CommandLine.Option(
             names=Constants.OPT_CONTACT,
