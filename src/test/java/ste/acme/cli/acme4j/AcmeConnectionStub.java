@@ -62,14 +62,8 @@ public class AcmeConnectionStub implements Connection {
     }
 
     @Override
-    public int sendRequest(URL url, Session session, ZonedDateTime ifModifiedSince) throws AcmeServerException {
-        int status = response.status();
-        if (status != HTTP_OK && status != HTTP_CREATED) {
-            throw new AcmeServerException(
-                new Problem(TestUtils.getJSON(response.resource()), url)
-            );
-        }
-        return response.status();
+    public int sendRequest(URL url, Session session, ZonedDateTime ifModifiedSince) throws AcmeException {
+        return performRequest(url, null, session, null, locationUrl, MIME_JSON);
     }
 
     @Override
@@ -157,6 +151,12 @@ public class AcmeConnectionStub implements Connection {
         KeyPair keypair, URL accountLocation, String accept)
     throws AcmeException {
         System.out.printf("performRequest %s with session %s will respond %s\n", url, session.toString(), response);
+        int status = response.status();
+        if (status != HTTP_OK && status != HTTP_CREATED) {
+            throw new AcmeServerException(
+                new Problem(TestUtils.getJSON(response.resource()), url)
+            );
+        }
         return response.status();
     }
 
