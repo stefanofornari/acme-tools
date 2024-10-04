@@ -1,8 +1,8 @@
 {
     "identifier":
     {
-        "type": "ip",
-        "value": "cacert1.com"
+        "type": "dns",
+        "value": "mydomain.com"
     },
     "status": "pending",
     "challenges": [

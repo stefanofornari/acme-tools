@@ -113,10 +113,8 @@ public class AcmeProviderStubTest {
         then(order).isNotNull();
         then(order.getStatus()).isEqualTo(Status.PENDING);
 
-        System.out.println("CHECK1");
         while (!EnumSet.of(Status.VALID, Status.INVALID).contains(order.getStatus())) {
             Thread.sleep(100);
-            System.out.println("CHECK2");
             order.fetch();
         }
 

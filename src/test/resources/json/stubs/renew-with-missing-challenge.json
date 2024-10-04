@@ -1,0 +1,8 @@
+{
+    "responseQueue": [
+        { "status": 200, "resource": "updateOrderResponse" }, { "status": 200, "resource": "updateOrderResponse" },
+        { "status": 200, "resource": "authorizationResponse1" }, { "status": 200, "resource": "triggerHttpChallengeResponse" }, { "status": 200, "resource": "authorizationResponse1" },
+        { "status": 200, "resource": "updateOrderResponse" }, { "status": 200, "resource": "updateOrderResponse" },
+        { "status": 200, "resource": "updateOrderResponse" }, { "status": 200, "resource": "updateOrderResponse" }
+    ]
+}

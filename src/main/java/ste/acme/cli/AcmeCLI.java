@@ -32,8 +32,6 @@ import java.security.Security;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.shredzone.acme4j.Account;
 import org.shredzone.acme4j.AccountBuilder;
@@ -145,9 +143,16 @@ public class AcmeCLI {
             @Mixin AcmePreferences preferences,
             @CommandLine.Parameters(
                 arity = "1",
+                index = "0",
                 paramLabel = "<endpoint>",
                 description = "ACME CA endpoint or URI e.g. https://someca.com, acme://example.org/staging")
-            String endpoint
+            String endpoint,
+            @CommandLine.Parameters(
+                arity = "1",
+                index = "1",
+                paramLabel = "<domain>",
+                description = "the domain to renew the certificate for")
+            String domain
     ) throws IOException, AcmeException {
         Session session = new Session(endpoint);
 
@@ -160,7 +165,7 @@ public class AcmeCLI {
         System.out.println(session.getMetadata().getTermsOfService());
         System.out.println(session.getMetadata().getWebsite());
 
-        System.out.println("Renewing SSL certificates from " + session.resourceUrl(Resource.NEW_ORDER));
+        System.out.println("Renewing SSL certificates for domain " + domain + " from " + session.resourceUrl(Resource.NEW_ORDER));
         System.out.println("using account credentials in " + new File(preferences.account()).getAbsolutePath());
         System.out.println("using domain credentials in " + new File(preferences.domain()).getAbsolutePath());
         System.out.println("storing the new certificate in " + new File(preferences.certificate()).getAbsolutePath());
@@ -169,7 +174,7 @@ public class AcmeCLI {
         // TODO: fix domain and duration
         //
         Order order = login.newOrder()
-            .domain("example.org")
+            .domain(domain)
             .create();
 
         //
@@ -181,18 +186,8 @@ public class AcmeCLI {
                 Optional<Http01Challenge> challenge = auth.findChallenge(Http01Challenge.class);
                 if (challenge.isPresent()) {
                     try {
-                        if (challenge(preferences, auth.getIdentifier().getIP().getHostName(), challenge.get())) {
-                            System.out.println("Cahallenge passed successfully");
-                            while (!EnumSet.of(Status.VALID, Status.INVALID).contains(auth.getStatus())) {
-                                System.out.println("Authorization status sill not VALID");
-                                auth.fetch();
-                                try {
-                                    Thread.sleep(preferences.pollingInterval());
-                                } catch (InterruptedException x) {
-                                    break;
-                                }
-                            }
-                        }
+                        challenge(preferences, auth, challenge.get());
+                        System.out.println("Cahallenge passed successfully");
                     } catch (AcmeException x) {
                         System.out.println("Unsuccessful challenge: " + x.getMessage());
                         return;
@@ -238,15 +233,14 @@ public class AcmeCLI {
 
     // --------------------------------------------------------- private methods
 
-    private boolean challenge(
-        final AcmePreferences preferences, final String domain, final Http01Challenge challenge
+    private void challenge(
+        final AcmePreferences preferences, final Authorization auth, final Http01Challenge challenge
     ) throws AcmeException {
         final String CHALLENGE_PATH = "/.well-known/acme-challenge/" + challenge.getToken();
         //
         // TODO: move to a ChallengeServer
         //
         System.out.println("HTTP challenge");
-        final CountDownLatch latch = new CountDownLatch(1);
 
         int port = preferences.port();
 
@@ -259,31 +253,41 @@ public class AcmeCLI {
                 try (OutputStream os = exchange.getResponseBody()) {
                     os.write(response.getBytes());
                 }
-                latch.countDown();
             });
             server.start();
 
             port = server.getAddress().getPort(); // if the port was 0 an available port has been randomly picked
             System.out.println("Listener started on port " + port);
             System.out.println("Acme-tools is now ready to respond to the CA challenge. The CA server will try");
-            System.out.printf("to connect to the URL http://%s:%d%s\n", domain, port, CHALLENGE_PATH);
+            System.out.printf("to connect to the URL http://%s%s\n", auth.getIdentifier().getDomain(), CHALLENGE_PATH);
             System.out.println("Please make sure that the above URL is accessible from internet.");
 
             challenge.trigger();
 
-            boolean timeoutExpired = !latch.await(
-                preferences.challengeTimeout().toMillis(), TimeUnit.MILLISECONDS
-            );
+            //
+            // TODO: this is potentially an endless loop
+            //
+            long pollingMillis = preferences.pollingInterval();
+            long millisToWait = preferences.challengeTimeout().toMillis();
+            while ((millisToWait > 0) && EnumSet.of(Status.PENDING, Status.PROCESSING).contains(auth.getStatus())) {
+                System.out.println("Authorization status still processing");
+                auth.fetch();
+                try {
+                    Thread.sleep(pollingMillis);
+                    millisToWait -= pollingMillis;
+                } catch (InterruptedException x) {
+                    break;
+                }
+            }
+
             server.stop(0);
 
-            if (timeoutExpired) {
+            if (auth.getStatus() != Status.VALID) {
                 throw new AcmeException("no challenge received in " + preferences.challengeTimeout().toString().substring(2));
             }
-        } catch (IOException | InterruptedException x) {
+        } catch (IOException x) {
             throw new AcmeException(x.getMessage(), x);
         }
-
-        return true;
     }
 
     // ---------------------------------------------------------AcmeToolsVersion
