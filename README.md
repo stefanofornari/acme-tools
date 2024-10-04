@@ -45,8 +45,8 @@ renew a previously created certificate
 
 ```
 
-Credits
+Credits and references
 ====
 
-Based on [acme4j](https://github.com/shred/acme4j).
-[Find short URL for you CA here](https://shredzone.org/maven/acme4j/ca/index.html).
+- Based on [acme4j](https://github.com/shred/acme4j).
+- [Find short URL for you CA here](https://shredzone.org/maven/acme4j/ca/index.html).
