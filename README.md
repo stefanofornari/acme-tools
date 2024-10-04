@@ -1,17 +1,20 @@
-Command-line (for now) tools to deal with ACME certificates
+ACME TOOLS
 ===
+Command-line (for now) tools to deal with ACME certificates
 
 # acme-tools
+```
 Usage: acme-tools [--help] [--version] [COMMAND]
       --help      display this help and exit
       --version   show version information
 Commands:
   new-account  create a new account
   renew        renew a previously created certificate
+```
 
 To create a new account
 ====
-
+```
 Usage: acme-tools new-account [--account-keys=<accountFile>]
                               [--contact=<email>] <endpoint>
 create a new account
@@ -20,10 +23,11 @@ create a new account
       --account-keys=<accountFile>
                           optional account keys file
       --contact=<email>   optional contact email to provide to the CA
+```
 
 To renew a certificate
 ====
-
+```
 Usage: acme-tools renew [--account-keys=<account>]
                         [--certificate=<certificate>]
                         [--challenge-timeout=<challengeTimeout>]
@@ -47,6 +51,7 @@ renew a previously created certificate
                       interval in millisecond used when polling for events
       --port=<port>   tcp port to use to listen for CA challenge request; if
                         not provided an available port will be picked randomly
+```
 
 Credits
 ====
