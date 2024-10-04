@@ -34,16 +34,16 @@ public class AcmePreferences {
 
     private static final Pattern PERIOD_PATTERN = Pattern.compile("([0-9]+)(ms|[dhms])");
 
-    @Option(names=Constants.OPT_ACCOUNT_KEYS, required=false, description="optional account keys file", defaultValue = Constants.DEFAULT_ACCOUNT_KEYS)
+    @Option(names=Constants.OPT_ACCOUNT_KEYS, required=false, description="optional account keys file (default: account.pem)", defaultValue = Constants.DEFAULT_ACCOUNT_KEYS)
     private String account = Constants.DEFAULT_ACCOUNT_KEYS;
 
-    @Option(names=Constants.OPT_DOMAIN_KEYS, required=false, description="optional domain keys file", defaultValue = Constants.DEFAULT_DOMAIN_KEYS)
+    @Option(names=Constants.OPT_DOMAIN_KEYS, required=false, description="optional domain keys file (default: domain.pem)", defaultValue = Constants.DEFAULT_DOMAIN_KEYS)
     private String domain = Constants.DEFAULT_DOMAIN_KEYS;
 
-    @Option(names=Constants.OPT_CERTIFICATE, required=false, description="optional certificate file", defaultValue = Constants.DEFAULT_CERTIFICATE)
+    @Option(names=Constants.OPT_CERTIFICATE, required=false, description="optional filename for the certificate (default: domain.crt)", defaultValue = Constants.DEFAULT_CERTIFICATE)
     private String certificate = Constants.DEFAULT_CERTIFICATE;
 
-    @Option(names=Constants.OPT_POLLING_INTERVAL, required=false, description="interval in millisecond used when polling for events", defaultValue = Constants.DEFAULT_POLLING_INTERVAL)
+    @Option(names=Constants.OPT_POLLING_INTERVAL, required=false, description="optional interval in millisecond used when polling for events (default: 3000)", defaultValue = Constants.DEFAULT_POLLING_INTERVAL)
     private int pollingInterval = Integer.parseInt(Constants.DEFAULT_POLLING_INTERVAL);
 
     @Option(names=Constants.OPT_PORT, required=false, description="tcp port to use to listen for CA challenge request; if not provided an available port will be picked randomly")
@@ -142,7 +142,7 @@ public class AcmePreferences {
     @Option(
         names=Constants.OPT_CHALLENGE_TIMEOUT,
         required=false,
-        description="max time to wait for a challenge in human readable form (e.g. 1m 30s)",
+        description="max time to wait for a challenge in human readable form (e.g. 1m 30s, default: 30s)",
         defaultValue = Constants.DEFAULT_CHALLENGE_TIMEOUT
     )
 

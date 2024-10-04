@@ -91,7 +91,7 @@ public class AcmeCLI {
         }
     }
 
-    @Command(name = "new-account", description = "create a new account")
+    @Command(name = "new-account", description = "create a new account", usageHelpWidth = 300)
     protected void newAccount(
         @CommandLine.Parameters(
             arity = "1",
@@ -101,7 +101,7 @@ public class AcmeCLI {
         @CommandLine.Option(
             names=Constants.OPT_ACCOUNT_KEYS,
             required=false,
-            description="optional account keys file",
+            description="optional account keys file (default: account.pem)",
             defaultValue = Constants.DEFAULT_ACCOUNT_KEYS)
         File accountFile,
         @CommandLine.Option(
@@ -138,7 +138,7 @@ public class AcmeCLI {
         System.out.println("New account created with URL " + account.getLocation());
     }
 
-    @Command(name = "renew", description = "renew a previously created certificate")
+    @Command(name = "renew", description = "renew a previously created certificate", usageHelpWidth = 300)
     protected void renew(
             @Mixin AcmePreferences preferences,
             @CommandLine.Parameters(
