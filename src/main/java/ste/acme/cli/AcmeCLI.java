@@ -88,7 +88,7 @@ public class AcmeCLI {
                 .setExecutionExceptionHandler(new CLIExceptionHandler())
                 .execute(args);
         } catch (Throwable x) {
-            System.out.println("Something went wrong: " + x.getMessage());
+            out("Something went wrong: " + x.getMessage());
             //
             // TODO: move it to the log
             //
@@ -119,12 +119,12 @@ public class AcmeCLI {
         Session session = new Session(endpoint);
         AcmeProvider provider = session.provider();
 
-        System.out.println(
+        out(
             "Creating new account and credentials for " +
             provider.resolve(session.getServerUri()) +
             ((email != null) ? " with contact " + email : "")
         );
-        System.out.println("Storing the new credentials in " + accountFile.getAbsolutePath());
+        out("Storing the new credentials in " + accountFile.getAbsolutePath());
 
         KeyPair accountKeyPair = KeyPairUtils.createKeyPair();
 
@@ -140,7 +140,7 @@ public class AcmeCLI {
             KeyPairUtils.writeKeyPair(accountKeyPair, fw);
         }
 
-        System.out.println("New account created with URL " + account.getLocation());
+        out("New account created with URL " + account.getLocation());
     }
 
     @Command(name = "renew", description = "renew a previously created certificate", usageHelpWidth = 300)
@@ -167,13 +167,13 @@ public class AcmeCLI {
                 .useKeyPair(KeyPairUtils.readKeyPair(new FileReader(preferences.account())))
                 .createLogin(session);
 
-        System.out.println(session.getMetadata().getTermsOfService());
-        System.out.println(session.getMetadata().getWebsite());
+        out(session.getMetadata().getTermsOfService());
+        out(session.getMetadata().getWebsite());
 
-        System.out.println("Renewing SSL certificates for domain " + domain + " from " + session.resourceUrl(Resource.NEW_ORDER));
-        System.out.println("using account credentials in " + new File(preferences.account()).getAbsolutePath());
-        System.out.println("using domain credentials in " + new File(preferences.domain()).getAbsolutePath());
-        System.out.println("storing the new certificate in " + new File(preferences.certificate()).getAbsolutePath());
+        out("Renewing SSL certificates for domain " + domain + " from " + session.resourceUrl(Resource.NEW_ORDER));
+        out("using account credentials in " + new File(preferences.account()).getAbsolutePath());
+        out("using domain credentials in " + new File(preferences.domain()).getAbsolutePath());
+        out("storing the new certificate in " + new File(preferences.certificate()).getAbsolutePath());
 
         //
         // TODO: fix domain and duration
@@ -187,21 +187,21 @@ public class AcmeCLI {
         //
         for (Authorization auth : order.getAuthorizations()) {
             if (auth.getStatus() == Status.PENDING) {
-                System.out.println("Authorizing " + auth.getIdentifier());
+                out("Authorizing " + auth.getIdentifier());
                 Optional<Http01Challenge> challenge = auth.findChallenge(Http01Challenge.class);
                 if (challenge.isPresent()) {
                     try {
                         challenge(preferences, auth, challenge.get());
-                        System.out.println("Cahallenge passed successfully");
+                        out("Cahallenge passed successfully");
                     } catch (AcmeException x) {
-                        System.out.println("Unsuccessful challenge: " + x.getMessage());
+                        out("Unsuccessful challenge: " + x.getMessage());
                         return;
                     }
                 }
             }
         }
 
-        System.out.println("Finalizing the order with the CA");
+        out("Finalizing the order with the CA");
         order.execute(
             KeyPairUtils.readKeyPair(new FileReader(new File(preferences.domain()).getAbsolutePath()))
         );
@@ -215,7 +215,7 @@ public class AcmeCLI {
         */
 
         while (!EnumSet.of(Status.VALID, Status.INVALID).contains(order.getStatus())) {
-            System.out.println("Order still not VALID");
+            out("Order still not VALID");
             try {
                 Thread.sleep(preferences.pollingInterval());
             } catch (InterruptedException x) {
@@ -224,16 +224,16 @@ public class AcmeCLI {
             order.fetch();
         }
 
-        System.out.println("Order processed, getting the certificate");
+        out("Order processed, getting the certificate");
         Certificate cert = order.getCertificate();
 
         final String certificate = new File(preferences.certificate()).getAbsolutePath();
-        System.out.println("Writing the certificate to " + certificate);
+        out("Writing the certificate to " + certificate);
         try (FileWriter out = new FileWriter(certificate)) {
             cert.writeCertificate(out);
         }
 
-        System.out.println("Congratulations! Your reewed certificated is ready.");
+        out("Congratulations! Your reewed certificated is ready.");
     }
 
     @Command(name = "info", description = "print information in the provided certificate", usageHelpWidth = 300)
@@ -248,17 +248,17 @@ public class AcmeCLI {
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
 
             try (FileInputStream fis = new FileInputStream(certificateFile)) {
-                System.out.println("Reading certificate " + certificateFile.getAbsolutePath());
+                out("Reading certificate " + certificateFile.getAbsolutePath());
                 X509Certificate certificate = (X509Certificate)cf.generateCertificate(fis);
-                System.out.println(certificate);
+                out(certificate);
             }
 
         } catch (CertificateException x) {
-            System.out.println("Invalid certificate, it does not seem to be a X509 certificate: " + x.getMessage());
+            out("Invalid certificate, it does not seem to be a X509 certificate: " + x.getMessage());
         } catch (FileNotFoundException x) {
-            System.out.println("Invalid certificate file " + certificateFile.getAbsolutePath() + ": " + x.getMessage());
+            out("Invalid certificate file " + certificateFile.getAbsolutePath() + ": " + x.getMessage());
         } catch (IOException x) {
-            System.out.println("Error reading the certificate: " + x.getMessage());
+            out("Error reading the certificate: " + x.getMessage());
         }
 
     }
@@ -272,7 +272,7 @@ public class AcmeCLI {
         //
         // TODO: move to a ChallengeServer
         //
-        System.out.println("HTTP challenge");
+        out("HTTP challenge");
 
         int port = preferences.port();
 
@@ -289,10 +289,10 @@ public class AcmeCLI {
             server.start();
 
             port = server.getAddress().getPort(); // if the port was 0 an available port has been randomly picked
-            System.out.println("Listener started on port " + port);
-            System.out.println("Acme-tools is now ready to respond to the CA challenge. The CA server will try");
+            out("Listener started on port " + port);
+            out("Acme-tools is now ready to respond to the CA challenge. The CA server will try");
             System.out.printf("to connect to the URL http://%s%s\n", auth.getIdentifier().getDomain(), CHALLENGE_PATH);
-            System.out.println("Please make sure that the above URL is accessible from internet.");
+            out("Please make sure that the above URL is accessible from internet.");
 
             challenge.trigger();
 
@@ -302,7 +302,7 @@ public class AcmeCLI {
             long pollingMillis = preferences.pollingInterval();
             long millisToWait = preferences.challengeTimeout().toMillis();
             while ((millisToWait > 0) && EnumSet.of(Status.PENDING, Status.PROCESSING).contains(auth.getStatus())) {
-                System.out.println("Authorization status still processing");
+                out("Authorization status still processing");
                 auth.fetch();
                 try {
                     Thread.sleep(pollingMillis);
@@ -320,6 +320,10 @@ public class AcmeCLI {
         } catch (IOException x) {
             throw new AcmeException(x.getMessage(), x);
         }
+    }
+
+    private static void out(final Object o) {
+        System.out.println(o);
     }
 
     // ---------------------------------------------------------AcmeToolsVersion
@@ -354,7 +358,7 @@ public class AcmeCLI {
     protected static class CLIExceptionHandler implements IExecutionExceptionHandler {
         @Override
         public int handleExecutionException(Exception x, CommandLine commandLine, ParseResult parseResult) {
-            System.out.println("Something went wrong: " + x.getMessage());
+            out("Something went wrong: " + x.getMessage());
             x.printStackTrace();
             return commandLine.getCommandSpec().exitCodeOnExecutionException();
         }
