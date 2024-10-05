@@ -22,6 +22,8 @@ package ste.acme.cli;
 
 import com.sun.net.httpserver.HttpServer;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -29,6 +31,9 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.security.KeyPair;
 import java.security.Security;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Properties;
@@ -229,6 +234,33 @@ public class AcmeCLI {
         }
 
         System.out.println("Congratulations! Your reewed certificated is ready.");
+    }
+
+    @Command(name = "info", description = "print information in the provided certificate", usageHelpWidth = 300)
+    protected void info(
+        @CommandLine.Parameters(
+            arity = "1",
+            paramLabel = "<certificate>",
+            description = "the filepath of the certificate")
+        File certificateFile
+    ) {
+        try {
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+
+            try (FileInputStream fis = new FileInputStream(certificateFile)) {
+                System.out.println("Reading certificate " + certificateFile.getAbsolutePath());
+                X509Certificate certificate = (X509Certificate)cf.generateCertificate(fis);
+                System.out.println(certificate);
+            }
+
+        } catch (CertificateException x) {
+            System.out.println("Invalid certificate, it does not seem to be a X509 certificate: " + x.getMessage());
+        } catch (FileNotFoundException x) {
+            System.out.println("Invalid certificate file " + certificateFile.getAbsolutePath() + ": " + x.getMessage());
+        } catch (IOException x) {
+            System.out.println("Error reading the certificate: " + x.getMessage());
+        }
+
     }
 
     // --------------------------------------------------------- private methods
