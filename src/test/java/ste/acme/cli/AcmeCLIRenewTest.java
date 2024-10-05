@@ -52,24 +52,20 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.shredzone.acme4j.connector.Resource;
 import ste.xtest.concurrent.WaitFor;
-import ste.xtest.exec.BugFreeExec;
 import ste.xtest.net.NetTools;
 
 /**
  *
  */
-public class AcmeCLIRenewTest extends BugFreeExec {
+public class AcmeCLIRenewTest extends AcmeCLIExec {
 
     private static final char[] PASSWORD = "keystore".toCharArray();
 
     @Test
     public void renew_acme_certificate_with_defaults() throws Exception {
         FileUtils.copyDirectory(new File("src/test/data/default"), HOME);
-        exec(
-            "java",
-//            "-Xdebug", "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=1044",  // uncomment and run the test for debug
-            AcmeCLI.class.getCanonicalName(), "renew", "acmetest:renew://cacert1.com", "mydomain.com"
-        );
+
+        execJava("renew", "acmetest:renew://cacert1.com", "mydomain.com");
 
         //System.out.println(err());
         //System.out.println(out());
@@ -98,14 +94,13 @@ public class AcmeCLIRenewTest extends BugFreeExec {
         FileUtils.copyDirectory(new File("src/test/data/default"), HOME);
         FileUtils.moveFile(new File(HOME, "account.pem"), new File(HOME, "account2.pem"));
 
-        exec(
-            "java",
-            AcmeCLI.class.getCanonicalName(), "renew", "acmetest:renew://cacert1.com", "mydomain.com",
+        execJava(
+            "renew", "acmetest:renew://cacert1.com", "mydomain.com",
             "--account-keys", "account2.pem"
         );
 
-        //System.out.println(err());
-        //System.out.println(out());
+        System.out.println(err());
+        System.out.println(out());
 
         then(out())
             .contains("Renewing SSL certificates for domain mydomain.com from https://cacert1.com/" + Resource.NEW_ORDER)
@@ -129,9 +124,8 @@ public class AcmeCLIRenewTest extends BugFreeExec {
         FileUtils.copyDirectory(new File("src/test/data/default"), HOME);
         FileUtils.moveFile(new File(HOME, "domain.pem"), new File(HOME, "domain2.pem"));
 
-        exec(
-            "java",
-            AcmeCLI.class.getCanonicalName(), "renew", "acmetest:renew://cacert1.com", "mydomain.com",
+        execJava(
+            "renew", "acmetest:renew://cacert1.com", "mydomain.com",
             "--domain-keys", "domain2.pem"
         );
 
@@ -156,9 +150,8 @@ public class AcmeCLIRenewTest extends BugFreeExec {
         FileUtils.deleteDirectory(HOME);
         FileUtils.copyDirectory(new File("src/test/data/default"), HOME);
 
-        exec(
-            "java",
-            AcmeCLI.class.getCanonicalName(), "renew", "acmetest:renew://cacert1.com", "mydomain.com",
+        execJava(
+            "renew", "acmetest:renew://cacert1.com", "mydomain.com",
             "--certificate", "newcert.crt"
         );
 
@@ -188,9 +181,8 @@ public class AcmeCLIRenewTest extends BugFreeExec {
         FileUtils.moveFile(new File(HOME, "account.pem"), new File(HOME, "account2.pem"));
         FileUtils.moveFile(new File(HOME, "domain.pem"), new File(HOME, "domain2.pem"));
 
-        exec(
-            "java",
-            AcmeCLI.class.getCanonicalName(), "renew", "acmetest:renew://cacert1.com", "mydomain.com",
+        execJava(
+            "renew", "acmetest:renew://cacert1.com", "mydomain.com",
             "--domain-keys", "domain2.pem", "--account-keys", "account2.pem", "--certificate", "newcert.crt"
         );
 
@@ -217,10 +209,8 @@ public class AcmeCLIRenewTest extends BugFreeExec {
         //
         // Run the tool, the output shall tell us how to satisfy the challenge
         //
-        final Process P = start(
-            "java",
-            //"-Xdebug", "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=1055",  // uncomment and run the test for debug
-            AcmeCLI.class.getCanonicalName(), "renew", "acmetest:renew-with-challenge://cacert1.com", "mydomain.com",
+        final Process P = startJava(
+            "renew", "acmetest:renew-with-challenge://cacert1.com", "mydomain.com",
             "--certificate", "newcert.crt",
             "--polling-interval", "1000"
         );
@@ -286,10 +276,8 @@ public class AcmeCLIRenewTest extends BugFreeExec {
         //
         // Run the tool, the output shall tell us how to satisfy the challenge
         //
-        final Process P = start(
-            "java",
-            //"-Xdebug", "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=1055",  // uncomment and run the test for debug
-            AcmeCLI.class.getCanonicalName(), "renew", "acmetest:renew-with-challenge://cacert1.com", "mydomain.com",
+        final Process P = startJava(
+            "renew", "acmetest:renew-with-challenge://cacert1.com", "mydomain.com",
             "--certificate", "newcert.crt",
             "--polling-interval", "1000", "--port", String.valueOf(PORT)
         );
@@ -339,10 +327,8 @@ public class AcmeCLIRenewTest extends BugFreeExec {
         //
         // Run the tool, the output shall tell us how to satisfy the challenge
         //
-        final Process P = start(
-            "java",
-            //"-Xdebug", "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=1055",  // uncomment and run the test for debug
-            AcmeCLI.class.getCanonicalName(), "renew", "acmetest:renew-with-missing-challenge://cacert1.com", "mydomain.com",
+        final Process P = startJava(
+            "renew", "acmetest:renew-with-missing-challenge://cacert1.com", "mydomain.com",
             "--certificate", "newcert.crt",
             "--polling-interval", "1000", "--challenge-timeout", "500ms"
         );
@@ -406,7 +392,6 @@ public class AcmeCLIRenewTest extends BugFreeExec {
     // --------------------------------------------------------- private methods
 
     private String extractChallengePort(final String s) throws Exception {
-        //Pattern p = Pattern.compile("http://cacert1\\.com:(\\d+)/\\.well-known/acme-challenge/(\\S)+");
         Pattern p = Pattern.compile("Listener started on port (\\d+)\\n");
         Matcher m = p.matcher(s);
 

@@ -21,20 +21,27 @@
 package ste.acme.cli;
 
 import java.io.File;
+import java.io.IOException;
 import org.apache.commons.io.FileUtils;
 import static org.assertj.core.api.BDDAssertions.then;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.SystemOutRule;
-import ste.xtest.exec.BugFreeExec;
 
 /**
  *
  */
-public class AcmeCLICertInfo extends BugFreeExec {
+public class AcmeCLICertInfo extends AcmeCLIExec {
 
     @Rule
     public final SystemOutRule OUT = new SystemOutRule().enableLog();
+
+    @Before
+    public void before() throws IOException {
+        super.before();
+        OUT.clearLog();
+    }
 
     @Test
     public void check_certificate_info_with_relative_path() throws Exception {
@@ -43,11 +50,7 @@ public class AcmeCLICertInfo extends BugFreeExec {
         // we want them created in the temporary HOME
         //
         FileUtils.copyDirectory(new File("src/test/data/default"), HOME);
-        exec(
-            "java",
-//            "-Xdebug", "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=1044",  // uncomment and run the test for debug
-            AcmeCLI.class.getCanonicalName(), "info", "domain.crt"
-        );
+        execJava("info", "domain.crt");
 
         //System.out.println(err());
         //System.out.println(out());
@@ -67,6 +70,8 @@ public class AcmeCLICertInfo extends BugFreeExec {
             .contains("Invalid certificate file " + new File("domain.crt").getAbsolutePath() + ": domain.crt (No such file or directory)")
             .doesNotContain("Subject: CN=domain, L=Minas Tirith, ST=Gondor, C=XX");
 
+        OUT.clearLog();
+
         FileUtils.copyDirectory(new File("src/test/data/default"), HOME);
         final File F = new File(HOME, "domain.crt"); F.setReadable(false);
 
@@ -75,16 +80,11 @@ public class AcmeCLICertInfo extends BugFreeExec {
         then(OUT.getLog())
             .contains("Invalid certificate file " + F.getAbsolutePath() + ": ")
             .doesNotContain("Subject: CN=domain, L=Minas Tirith, ST=Gondor, C=XX");
-
-
     }
 
     @Test
     public void check_certificate_invalid_certificate() throws Exception {
         AcmeCLI.main("info", new File("src/test/data/default/account.pem").getAbsolutePath());
-
-        //System.out.println(err());
-        //System.out.println(out());
 
         then(OUT.getLog())
             .contains("Invalid certificate, it does not seem to be a X509 certificate: signed overrun, bytes = 918")
