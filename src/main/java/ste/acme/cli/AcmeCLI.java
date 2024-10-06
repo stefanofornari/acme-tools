@@ -350,9 +350,6 @@ public class AcmeCLI {
 
             challenge.trigger();
 
-            //
-            // TODO: this is potentially an endless loop
-            //
             long pollingMillis = preferences.pollingInterval();
             long millisToWait = preferences.challengeTimeout().toMillis();
             while ((millisToWait > 0) && EnumSet.of(Status.PENDING, Status.PROCESSING).contains(auth.getStatus())) {
