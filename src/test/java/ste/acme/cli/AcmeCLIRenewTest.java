@@ -42,7 +42,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import static org.assertj.core.api.BDDAssertions.fail;
 import static org.assertj.core.api.BDDAssertions.then;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMKeyPair;
@@ -51,6 +50,7 @@ import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.shredzone.acme4j.connector.Resource;
+import static ste.acme.cli.Format.PKCS12;
 import ste.xtest.concurrent.WaitFor;
 import ste.xtest.net.NetTools;
 
@@ -152,7 +152,7 @@ public class AcmeCLIRenewTest extends AcmeCLIExec {
 
         execJava(
             "renew", "acmetest:renew://cacert1.com", "mydomain.com",
-            "--certificate", "newcert.crt"
+            "--out", "newcert.crt"
         );
 
         //System.out.println(err());
@@ -183,7 +183,7 @@ public class AcmeCLIRenewTest extends AcmeCLIExec {
 
         execJava(
             "renew", "acmetest:renew://cacert1.com", "mydomain.com",
-            "--domain-keys", "domain2.pem", "--account-keys", "account2.pem", "--certificate", "newcert.crt"
+            "--domain-keys", "domain2.pem", "--account-keys", "account2.pem", "--out", "newcert.crt"
         );
 
         then(out())
@@ -211,7 +211,7 @@ public class AcmeCLIRenewTest extends AcmeCLIExec {
         //
         final Process P = startJava(
             "renew", "acmetest:renew-with-challenge://cacert1.com", "mydomain.com",
-            "--certificate", "newcert.crt",
+            "--out", "newcert.crt",
             "--polling-interval", "1000"
         );
 
@@ -246,7 +246,7 @@ public class AcmeCLIRenewTest extends AcmeCLIExec {
         then(out()).contains("Finalizing the order with the CA")
                    .contains("Order processed, getting the certificate")
                    .contains("Writing the certificate to " + cert.getAbsolutePath())
-                   .contains("Congratulations! Your reewed certificated is ready.");
+                   .contains("Congratulations! Your renewed certificated is ready.");
 
         then(cert).hasContent(
             IOUtils.resourceToString("/cert.pem", Charset.defaultCharset())
@@ -278,7 +278,7 @@ public class AcmeCLIRenewTest extends AcmeCLIExec {
         //
         final Process P = startJava(
             "renew", "acmetest:renew-with-challenge://cacert1.com", "mydomain.com",
-            "--certificate", "newcert.crt",
+            "--out", "newcert.crt",
             "--polling-interval", "1000", "--port", String.valueOf(PORT)
         );
 
@@ -329,7 +329,7 @@ public class AcmeCLIRenewTest extends AcmeCLIExec {
         //
         final Process P = startJava(
             "renew", "acmetest:renew-with-missing-challenge://cacert1.com", "mydomain.com",
-            "--certificate", "newcert.crt",
+            "--out", "newcert.crt",
             "--polling-interval", "1000", "--challenge-timeout", "500ms"
         );
 
@@ -342,21 +342,48 @@ public class AcmeCLIRenewTest extends AcmeCLIExec {
         then(new File(HOME, "newcert.crt")).doesNotExist();
     }
 
-    @Ignore
     @Test
     public void renew_and_store_in_p12_keystore() throws Exception {
+        final File KEYSTORE = new File(HOME, "keystore.p12");
+        final String SECRET = "1234567890";
+
         AcmeCLI.main(
-            "renew", "acmetest:renew-with-challenge://cacert1.com", "mydomain.com",
-            "--keystore", "keystore.p12", "--keystore-password", "1234567890"
+            "renew", "acmetest:renew://cacert1.com", "mydomain.com",
+            "--account-keys", "src/test/data/default/account.pem",
+            "--domain-keys", "src/test/data/default/domain.pem",
+            "--out", KEYSTORE.getAbsolutePath(), "--format", PKCS12.toString(), "--secret", SECRET
         );
-        fail("TO DO");
+
+        KeyStore keyStore = KeyStore.getInstance("PKCS12", "BC");
+        keyStore.load(new FileInputStream(KEYSTORE), SECRET.toCharArray());
+
+        then(STDOUT.getLog()).contains("Congratulations! Your renewed certificated is ready.");
+
+        then(keyStore.containsAlias("mydomain.com")).isTrue();
     }
 
     @Test
+    public void renew_and_store_in_p12_keystore_with_missing_password() throws Exception {
+        final File KEYSTORE = new File(HOME, "keystore.p12");
+        final String SECRET = "1234567890";
+
+        AcmeCLI.main(
+            "renew", "acmetest:renew://cacert1.com", "mydomain.com",
+            "--account-keys", "src/test/data/default/account.pem",
+            "--domain-keys", "src/test/data/default/domain.pem",
+            "--out", KEYSTORE.getAbsolutePath(), "--format", PKCS12.toString()
+        );
+
+        then(STDOUT.getLog()).contains("A keystore password must be provided for output " + PKCS12 + " (use " + Constants.OPT_SECRET + ")");
+        then(KEYSTORE).doesNotExist();
+    }
+
+    @Ignore
+    @Test
     public void testSomeMethod() throws Exception {
         Security.addProvider(new BouncyCastleProvider());
-        //PEMParser pemParser = new PEMParser(new FileReader("/opt/uzz-api-0.0.1-SNAPSHOT/config/uzz.fornari.net.pem"));
-        PEMParser pemParser = new PEMParser(new FileReader("/opt/uzz-api-0.0.1-SNAPSHOT/config/letsencrypt-8bca605269b3fe4e71909d77bf5d9a86.pem"));
+        PEMParser pemParser = new PEMParser(new FileReader("/opt/uzz-api-0.0.1-SNAPSHOT/config/uzz.fornari.net.pem"));
+        //PEMParser pemParser = new PEMParser(new FileReader("/opt/uzz-api-0.0.1-SNAPSHOT/config/letsencrypt-8bca605269b3fe4e71909d77bf5d9a86.pem"));
         JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
         PEMKeyPair object = (PEMKeyPair)pemParser.readObject();
         System.out.println("prvate info: " + object.getPrivateKeyInfo().getAttributes());

@@ -24,20 +24,29 @@ import com.sun.net.httpserver.HttpServer;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.security.KeyPair;
+import java.security.KeyStore;
+import java.security.PrivateKey;
 import java.security.Security;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.PEMKeyPair;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.shredzone.acme4j.Account;
 import org.shredzone.acme4j.AccountBuilder;
 import org.shredzone.acme4j.Authorization;
@@ -56,6 +65,8 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.IExecutionExceptionHandler;
 import picocli.CommandLine.Mixin;
 import picocli.CommandLine.ParseResult;
+import static ste.acme.cli.Format.PEM;
+import static ste.acme.cli.Format.PKCS12;
 
 /**
  *
@@ -159,21 +170,22 @@ public class AcmeCLI {
                 description = "the domain to renew the certificate for")
             String domain
     ) throws IOException, AcmeException {
+        checkRenewOptions(preferences);
         Session session = new Session(endpoint);
 
         Login login = new AccountBuilder()
                 .onlyExisting() // Do not create a new account
                 .agreeToTermsOfService()
-                .useKeyPair(KeyPairUtils.readKeyPair(new FileReader(preferences.account())))
+                .useKeyPair(KeyPairUtils.readKeyPair(new FileReader(preferences.accountKeys())))
                 .createLogin(session);
 
         out(session.getMetadata().getTermsOfService());
         out(session.getMetadata().getWebsite());
 
         out("Renewing SSL certificates for domain " + domain + " from " + session.resourceUrl(Resource.NEW_ORDER));
-        out("using account credentials in " + new File(preferences.account()).getAbsolutePath());
-        out("using domain credentials in " + new File(preferences.domain()).getAbsolutePath());
-        out("storing the new certificate in " + new File(preferences.certificate()).getAbsolutePath());
+        out("using account credentials in " + new File(preferences.accountKeys()).getAbsolutePath());
+        out("using domain credentials in " + new File(preferences.domainKeys()).getAbsolutePath());
+        out("storing the new certificate in " + new File(preferences.out()).getAbsolutePath());
 
         //
         // TODO: fix domain and duration
@@ -203,7 +215,7 @@ public class AcmeCLI {
 
         out("Finalizing the order with the CA");
         order.execute(
-            KeyPairUtils.readKeyPair(new FileReader(new File(preferences.domain()).getAbsolutePath()))
+            KeyPairUtils.readKeyPair(new FileReader(new File(preferences.domainKeys()).getAbsolutePath()))
         );
 
         /*
@@ -227,13 +239,48 @@ public class AcmeCLI {
         out("Order processed, getting the certificate");
         Certificate cert = order.getCertificate();
 
-        final String certificate = new File(preferences.certificate()).getAbsolutePath();
-        out("Writing the certificate to " + certificate);
-        try (FileWriter out = new FileWriter(certificate)) {
-            cert.writeCertificate(out);
+        final String outFilename = new File(preferences.out()).getAbsolutePath();
+        out("Writing the certificate to " + outFilename);
+
+        if (PEM.equals(preferences.format())) {
+            try (FileWriter out = new FileWriter(outFilename)) {
+                cert.writeCertificate(out);
+            }
+        } else {
+            PrivateKey privateKey = null;
+            try (
+                PEMParser parser = new PEMParser(
+                    new FileReader(preferences.domainKeys())
+                )) {
+
+                JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
+                KeyPair keyPair = converter.getKeyPair((PEMKeyPair)parser.readObject());
+                privateKey = keyPair.getPrivate();
+            }
+
+            try {
+                CertificateFactory cf = CertificateFactory.getInstance("X.509");
+                List<java.security.cert.Certificate> chainList = new ArrayList<>();
+
+                chainList.add(cert.getCertificate());
+
+                java.security.cert.Certificate[] chain = chainList.toArray(new java.security.cert.Certificate[0]);
+
+                // Create PKCS12 keystore
+                KeyStore keyStore = KeyStore.getInstance("PKCS12", "BC");
+                keyStore.load(null, null);
+                keyStore.setKeyEntry(domain, privateKey, preferences.secret().toCharArray(), chain);
+
+                try (FileOutputStream fos = new FileOutputStream(preferences.out())) {
+                    keyStore.store(fos, preferences.secret().toCharArray());
+                }
+            } catch (Exception x) {
+                out("Somethig went wrong: " + x.getMessage());
+                return;
+            }
         }
 
-        out("Congratulations! Your reewed certificated is ready.");
+        out("Congratulations! Your renewed certificated is ready.");
     }
 
     @Command(name = "info", description = "print information in the provided certificate", usageHelpWidth = 300)
@@ -264,6 +311,16 @@ public class AcmeCLI {
     }
 
     // --------------------------------------------------------- private methods
+
+    private void checkRenewOptions(final AcmePreferences preferences) throws IllegalArgumentException {
+        if (PKCS12.equals(preferences.format())) {
+            if (StringUtils.isEmpty(preferences.secret())) {
+                throw new IllegalArgumentException(
+                    "A keystore password must be provided for output " + PKCS12 + " (use " + Constants.OPT_SECRET + ")"
+                );
+            }
+        }
+    }
 
     private void challenge(
         final AcmePreferences preferences, final Authorization auth, final Http01Challenge challenge

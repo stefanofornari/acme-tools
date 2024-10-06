@@ -24,6 +24,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.Rule;
+import org.junit.contrib.java.lang.system.SystemOutRule;
 import ste.xtest.exec.BugFreeExec;
 
 /**
@@ -31,6 +33,9 @@ import ste.xtest.exec.BugFreeExec;
  *
  */
 public class AcmeCLIExec extends BugFreeExec {
+
+    @Rule
+    public final SystemOutRule STDOUT = new SystemOutRule().enableLog();
 
     //
     // We can not override existing exec() otherwise the super class would call

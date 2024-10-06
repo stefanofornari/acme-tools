@@ -24,6 +24,8 @@ import java.time.Duration;
 import org.assertj.core.api.BDDAssertions;
 import static org.assertj.core.api.BDDAssertions.then;
 import org.junit.Test;
+import static ste.acme.cli.Format.PEM;
+import static ste.acme.cli.Format.PKCS12;
 import static ste.xtest.Constants.BLANKS;
 import ste.xtest.net.NetTools;
 
@@ -38,14 +40,14 @@ public class AcmePreferencesTest {
 
         AcmePreferences p = new AcmePreferences();
 
-        then(p.account()).isEqualTo(Constants.DEFAULT_ACCOUNT_KEYS);
-        p.account(FILE); then(p.account()).isEqualTo(FILE);
+        then(p.accountKeys()).isEqualTo(Constants.DEFAULT_ACCOUNT_KEYS);
+        p.accountKeys(FILE); then(p.accountKeys()).isEqualTo(FILE);
 
-        then(p.domain()).isEqualTo(Constants.DEFAULT_DOMAIN_KEYS);
-        p.domain(FILE); then(p.domain()).isEqualTo(FILE);
+        then(p.domainKeys()).isEqualTo(Constants.DEFAULT_DOMAIN_KEYS);
+        p.domainKeys(FILE); then(p.domainKeys()).isEqualTo(FILE);
 
-        then(p.certificate()).isEqualTo(Constants.DEFAULT_CERTIFICATE);
-        p.certificate(FILE); then(p.certificate()).isEqualTo(FILE);
+        then(p.out()).isEqualTo(Constants.DEFAULT_CERTIFICATE);
+        p.out(FILE); then(p.out()).isEqualTo(FILE);
 
         then(p.pollingInterval()).isEqualTo(Integer.parseInt(Constants.DEFAULT_POLLING_INTERVAL));
         p.pollingInterval(10); then(p.pollingInterval()).isEqualTo(10);
@@ -72,6 +74,12 @@ public class AcmePreferencesTest {
             }).isInstanceOf(IllegalArgumentException.class)
             .hasMessage("challengeTimeout can not be blank");
         }
+
+        then(p.format()).isEqualTo(PEM);
+        p.format(PKCS12); then(p.format()).isEqualTo(PKCS12);
+
+        then(p.secret()).isNull();
+        p.secret("123456"); then(p.secret()).isEqualTo("123456");
     }
 
 }

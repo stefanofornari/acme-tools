@@ -32,16 +32,30 @@ import picocli.CommandLine.Option;
 
 public class AcmePreferences {
 
+    /**
+     * @return the secret
+     */
+    public String secret() {
+        return secret;
+    }
+
+    /**
+     * @param secret the secret to set
+     */
+    public void secret(String secret) {
+        this.secret = secret;
+    }
+
     private static final Pattern PERIOD_PATTERN = Pattern.compile("([0-9]+)(ms|[dhms])");
 
     @Option(names=Constants.OPT_ACCOUNT_KEYS, required=false, description="optional account keys file (default: account.pem)", defaultValue = Constants.DEFAULT_ACCOUNT_KEYS)
-    private String account = Constants.DEFAULT_ACCOUNT_KEYS;
+    private String accountkeys = Constants.DEFAULT_ACCOUNT_KEYS;
 
     @Option(names=Constants.OPT_DOMAIN_KEYS, required=false, description="optional domain keys file (default: domain.pem)", defaultValue = Constants.DEFAULT_DOMAIN_KEYS)
-    private String domain = Constants.DEFAULT_DOMAIN_KEYS;
+    private String domainKeys = Constants.DEFAULT_DOMAIN_KEYS;
 
-    @Option(names=Constants.OPT_CERTIFICATE, required=false, description="optional filename for the certificate (default: domain.crt)", defaultValue = Constants.DEFAULT_CERTIFICATE)
-    private String certificate = Constants.DEFAULT_CERTIFICATE;
+    @Option(names=Constants.OPT_OUT, required=false, description="optional filename for the certificate (default: domain.crt)", defaultValue = Constants.DEFAULT_CERTIFICATE)
+    private String out = Constants.DEFAULT_CERTIFICATE;
 
     @Option(names=Constants.OPT_POLLING_INTERVAL, required=false, description="optional interval in millisecond used when polling for events (default: 3000)", defaultValue = Constants.DEFAULT_POLLING_INTERVAL)
     private int pollingInterval = Integer.parseInt(Constants.DEFAULT_POLLING_INTERVAL);
@@ -52,46 +66,52 @@ public class AcmePreferences {
     /* see challengeTimeout(String) */
     private Duration challengeTimeout = Duration.ofSeconds(30);
 
+    @Option(names=Constants.OPT_OUT_FORMAT, required=false, description="optional format for the output file; one of 'pem', 'pkcs12' (default: pem)")
+    private Format format = Constants.DEFAULT_OUT_FORMAT;
+
+    @Option(names=Constants.OPT_SECRET, required=false, description="optional password for the output file (e.g. PKCS12 keystore password)")
+    private String secret = null;
+
     /**
-     * @return the account
+     * @return the account keys file
      */
-    public String account() {
-        return account;
+    public String accountKeys() {
+        return accountkeys;
     }
 
     /**
-     * @param account the account to set
+     * @param accountKeys the account keys file to set
      */
-    public void account(String account) {
-        this.account = account;
+    public void accountKeys(String accountKeys) {
+        this.accountkeys = accountKeys;
     }
 
     /**
-     * @return the domain
+     * @return the domain keys file
      */
-    public String domain() {
-        return domain;
+    public String domainKeys() {
+        return domainKeys;
     }
 
     /**
-     * @param domain the domain to set
+     * @param domainKeys the domain keys file to set
      */
-    public void domain(String domain) {
-        this.domain = domain;
+    public void domainKeys(String domainKeys) {
+        this.domainKeys = domainKeys;
     }
 
     /**
-     * @return the certificate
+     * @return the output file
      */
-    public String certificate() {
-        return certificate;
+    public String out() {
+        return out;
     }
 
     /**
-     * @param certificate the certificate to set
+     * @param out the output file
      */
-    public void certificate(String certificate) {
-        this.certificate = certificate;
+    public void out(String out) {
+        this.out = out;
     }
 
     /**
@@ -145,8 +165,6 @@ public class AcmePreferences {
         description="max time to wait for a challenge in human readable form (e.g. 1m 30s, default: 30s)",
         defaultValue = Constants.DEFAULT_CHALLENGE_TIMEOUT
     )
-
-
     public void challengeTimeout(String challengeTimeout) {
         if (StringUtils.isBlank(challengeTimeout)) {
             throw new IllegalArgumentException("challengeTimeout can not be blank");
@@ -184,5 +202,19 @@ public class AcmePreferences {
                 String.format("challengeTimeout '%s' does not contain any time period", challengeTimeout)
             );
         }
+    }
+
+    /**
+     * @return the format
+     */
+    public Format format() {
+        return format;
+    }
+
+    /**
+     * @param format the format to set
+     */
+    public void format(Format format) {
+        this.format = format;
     }
 }
