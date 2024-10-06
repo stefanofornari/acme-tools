@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.stefanofornari</groupId>
     <artifactId>acme-tools</artifactId>
-    <version>0.0-SNAPSHOT</version>
+    <version>0.1.0</version>
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -109,5 +109,6 @@
     <scm>
         <connection>scm:git:git@github.com:stefanofornari/acme-tools.git</connection>
         <url>https://github.com/stefanofornari/acme-tools</url>
-    </scm>
+      <tag>acme-tools-0.1.0</tag>
+  </scm>
 </project>
