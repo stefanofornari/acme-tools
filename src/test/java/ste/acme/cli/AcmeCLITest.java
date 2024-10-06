@@ -20,28 +20,46 @@
  */
 package ste.acme.cli;
 
+import java.io.File;
 import static org.assertj.core.api.BDDAssertions.then;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.contrib.java.lang.system.SystemOutRule;
-import ste.xtest.junit.BugFree;
 
 /**
  *
  */
-public class AcmeCLITest extends BugFree {
-
-    @Rule
-    public final SystemOutRule OUT = new SystemOutRule().enableLog();
+public class AcmeCLITest extends AcmeCLIExec {
 
     @Test
     public void show_error_messages_on_std_out() {
         AcmeCLI.main("renew", "acme://somewhere", "mydomain.com");
-        then(OUT.getLog()).contains("Something went wrong: No ACME provider found for acme://somewhere");
+        then(STDOUT.getLog()).contains("Something went wrong: No ACME provider found for acme://somewhere");
 
-        OUT.clearLog();
+        STDOUT.clearLog();
 
         AcmeCLI.main("renew", "acmetest:account-error://cacert1.com", "mydomain.com", "--account-keys", "src/test/data/default/account.pem");
-        then(OUT.getLog()).contains("Something went wrong: No account exists with the provided key");
+        then(STDOUT.getLog()).contains("Something went wrong: No account exists with the provided key");
+    }
+
+    @Test
+    public void write_session_log_ok() throws Exception {
+        final String accountKeys = new File("src/test/data/default/account.pem").getAbsolutePath();
+        execJava(
+            "renew", "acmetest:new-account://cacert1.com", "mydomain.com",
+            "--account-keys", accountKeys
+        );
+        then(new File(HOME, "acme-tools.log")).exists()
+            .content().contains("Renewing SSL certificates for domain mydomain.com");
+    }
+
+    @Test
+    public void write_session_log_error() throws Exception {
+        final String accountKeys = new File("src/test/data/default/account.pem").getAbsolutePath();
+        execJava(
+            "renew", "acmetest:account-error://cacert1.com", "mydomain.com",
+            "--account-keys", accountKeys
+        );
+        then(new File(HOME, "acme-tools.log")).exists()
+            .content().contains("INFO ste.acme-tools Something went wrong: No account exists with the provided key")
+                      .contains("SEVERE ste.acme-tools org.shredzone.acme4j.exception.AcmeServerException: No account exists with the provided key");
     }
 }

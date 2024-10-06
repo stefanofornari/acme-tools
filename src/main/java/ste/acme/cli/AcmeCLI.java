@@ -42,7 +42,9 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.logging.Logger;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
@@ -86,6 +88,8 @@ public class AcmeCLI {
 
     private static final long SLEEP = 3000;
 
+    private static final Logger LOG = Logger.getLogger("ste.acme-tools");
+
     @CommandLine.Option(names = Constants.OPT_HELP, usageHelp = true, description = "display this help and exit")
     boolean printHelp;
 
@@ -99,11 +103,7 @@ public class AcmeCLI {
                 .setExecutionExceptionHandler(new CLIExceptionHandler())
                 .execute(args);
         } catch (Throwable x) {
-            out("Something went wrong: " + x.getMessage());
-            //
-            // TODO: move it to the log
-            //
-            x.printStackTrace();
+            err(x);
         }
     }
 
@@ -171,7 +171,13 @@ public class AcmeCLI {
             String domain
     ) throws IOException, AcmeException {
         checkRenewOptions(preferences);
+
         Session session = new Session(endpoint);
+
+        out("Renewing SSL certificates for domain " + domain + " from " + session.resourceUrl(Resource.NEW_ORDER));
+        out("using account credentials in " + new File(preferences.accountKeys()).getAbsolutePath());
+        out("using domain credentials in " + new File(preferences.domainKeys()).getAbsolutePath());
+        out("storing the new certificate in " + new File(preferences.out()).getAbsolutePath());
 
         Login login = new AccountBuilder()
                 .onlyExisting() // Do not create a new account
@@ -179,17 +185,8 @@ public class AcmeCLI {
                 .useKeyPair(KeyPairUtils.readKeyPair(new FileReader(preferences.accountKeys())))
                 .createLogin(session);
 
-        out(session.getMetadata().getTermsOfService());
-        out(session.getMetadata().getWebsite());
+        // TODO: terms of services acceptance
 
-        out("Renewing SSL certificates for domain " + domain + " from " + session.resourceUrl(Resource.NEW_ORDER));
-        out("using account credentials in " + new File(preferences.accountKeys()).getAbsolutePath());
-        out("using domain credentials in " + new File(preferences.domainKeys()).getAbsolutePath());
-        out("storing the new certificate in " + new File(preferences.out()).getAbsolutePath());
-
-        //
-        // TODO: fix domain and duration
-        //
         Order order = login.newOrder()
             .domain(domain)
             .create();
@@ -381,6 +378,12 @@ public class AcmeCLI {
 
     private static void out(final Object o) {
         System.out.println(o);
+        LOG.info(() -> String.valueOf(o));
+    }
+
+    private static void err(Throwable t) {
+        out("Something went wrong: " + t.getMessage());
+        LOG.severe(() -> ExceptionUtils.getStackTrace(t));
     }
 
     // ---------------------------------------------------------AcmeToolsVersion
@@ -415,8 +418,7 @@ public class AcmeCLI {
     protected static class CLIExceptionHandler implements IExecutionExceptionHandler {
         @Override
         public int handleExecutionException(Exception x, CommandLine commandLine, ParseResult parseResult) {
-            out("Something went wrong: " + x.getMessage());
-            x.printStackTrace();
+            err(x);
             return commandLine.getCommandSpec().exitCodeOnExecutionException();
         }
     }
