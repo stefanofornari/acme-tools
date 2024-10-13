@@ -21,6 +21,7 @@
 package ste.acme.cli;
 
 import java.io.File;
+import org.apache.commons.io.FileUtils;
 import static org.assertj.core.api.BDDAssertions.then;
 import org.junit.Test;
 
@@ -61,5 +62,12 @@ public class AcmeCLITest extends AcmeCLIExec {
         then(new File(HOME, "acme-tools.log")).exists()
             .content().contains("INFO ste.acme-tools Something went wrong: No account exists with the provided key")
                       .contains("SEVERE ste.acme-tools org.shredzone.acme4j.exception.AcmeServerException: No account exists with the provided key");
+    }
+
+    @Test
+    public void run_from_any_dir() throws Exception {
+        FileUtils.copyDirectory(new File("src/test/data/default"), HOME);
+        exec(new File("src/main/dist/bin/acme-tools").getAbsolutePath(), "info", "domain.crt");
+        then(out()).contains("Subject: CN=domain, L=Minas Tirith, ST=Gondor, C=XX");
     }
 }
