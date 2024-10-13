@@ -19,6 +19,7 @@
 # DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR DISTRIBUTING
 # THIS SOFTWARE OR ITS DERIVATIVES.
 
+cwd=$(pwd) 
 scriptname=$(basename $0)
 scriptdir=$(cd $(dirname $0) && pwd)
 home=$(dirname "$scriptdir")
@@ -33,7 +34,6 @@ set_java
 set_classpath "$home/lib"
 set_logging
 
-cd "$home"
 
 #
 # Java settings
@@ -46,5 +46,7 @@ JAVA_OPTS="$JAVA_OPTS -Xmx12G -Djava.util.logging.config.file="$logging_config_f
 #
 load_config $scriptname
 
+cd "$cwd"
+
 exec 2>&1
-exec $uidcmd "$javacmd" $JAVA_OPTS ste.acme.cli.AcmeCLI "$@"
+exec -a "acme-tools" "$javacmd" $JAVA_OPTS ste.acme.cli.AcmeCLI "$@"
