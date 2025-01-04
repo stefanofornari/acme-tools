@@ -243,6 +243,9 @@ public class AcmeCLIRenewTest extends AcmeCLIExec {
         final File cert = new File(HOME, "newcert.crt");
         P.waitFor(5, TimeUnit.SECONDS);
 
+        //System.out.println(err());
+        //System.out.println(out());
+
         then(out()).contains("Finalizing the order with the CA")
                    .contains("Order processed, getting the certificate")
                    .contains("Writing the certificate to " + cert.getAbsolutePath())
@@ -339,6 +342,34 @@ public class AcmeCLIRenewTest extends AcmeCLIExec {
         //System.out.println(out());
 
         then(out()).contains("Unsuccessful challenge: no challenge received in 0.5S");
+        then(new File(HOME, "newcert.crt")).doesNotExist();
+    }
+
+    @Test
+    public void renew_with_failed_challenge() throws Exception {
+        //
+        // Prepare file system
+        //
+        FileUtils.deleteDirectory(HOME);
+        FileUtils.copyDirectory(new File("src/test/data/default"), HOME);
+
+        //
+        // Run the tool, the output shall tell us how to satisfy the challenge
+        //
+        final Process P = startJava(
+            "renew", "acmetest:renew-with-failing-challenge://cacert1.com", "mydomain.com",
+            "--out", "newcert.crt",
+            "--polling-interval", "1000", "--challenge-timeout", "500ms"
+        );
+
+        P.waitFor(5, TimeUnit.MINUTES);
+
+        //System.out.println(err());
+        //System.out.println(out());
+
+        then(out())
+            .contains("Unsuccessful challenge: INVALID - 0.0.0.0: Fetching http://uzz.fornari.net/.well-known/acme-challenge/xxx: Connection refused")
+            .doesNotContain("no challenge received in ");
         then(new File(HOME, "newcert.crt")).doesNotExist();
     }
 

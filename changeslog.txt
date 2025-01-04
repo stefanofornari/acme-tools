@@ -1,5 +1,8 @@
+20250104
+--------
+- Showing the error returned from the provider when trying the challenge
+
 20241013
 --------
-
 - Fixed issue #3 Provided relative files are resolved from acme-tools installation directory rather than current directory
 - Released 0.1.1

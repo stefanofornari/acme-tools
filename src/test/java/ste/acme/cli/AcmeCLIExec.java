@@ -59,7 +59,7 @@ public class AcmeCLIExec extends BugFreeExec {
     private String[] allArgs(final String[] args) {
         List<String> allArgs = new ArrayList<>();
         allArgs.add("java");
-        //allArgs.add("-Xdebug"); allArgs.add("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=1044", args); // uncomment and run the test for debug)
+        //allArgs.add("-Xdebug"); allArgs.add("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=1044"); // uncomment and run the test for debug)
         allArgs.add("-Djava.util.logging.config.file=" + new File("src/test/resources/logging.properties").getAbsolutePath());
         allArgs.add(AcmeCLI.class.getCanonicalName());
 

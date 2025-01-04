@@ -36,6 +36,7 @@ import org.shredzone.acme4j.challenge.Http01Challenge;
 import org.shredzone.acme4j.connector.Connection;
 import org.shredzone.acme4j.connector.NetworkSettings;
 import static org.shredzone.acme4j.connector.Resource.NEW_ACCOUNT;
+import org.shredzone.acme4j.exception.AcmeProtocolException;
 import org.shredzone.acme4j.provider.AcmeProvider;
 import org.shredzone.acme4j.toolbox.JSON;
 import org.shredzone.acme4j.util.KeyPairUtils;
@@ -140,6 +141,15 @@ public class AcmeProviderStub implements AcmeProvider {
 
     @Override
     public Challenge createChallenge(Login login, JSON data) {
-        return new Http01Challenge(login, getJSON("httpChallenge"));
+        //
+        // we may want to improve this logic, but for now, let's see if data is
+        // providing valid Http01Challenge; if not we read the json from a
+        // default one
+        //
+        try {
+            return new Http01Challenge(login, data);
+        } catch (AcmeProtocolException x) {
+            return new Http01Challenge(login, getJSON("httpChallenge"));
+        }
     }
 }

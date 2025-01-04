@@ -1,0 +1,28 @@
+{
+    "status": "invalid",
+    "identifier":
+            {
+                "type": "dns",
+                "value": "example.com"
+            },
+    "expires": "2015-03-01T14:09:00Z",
+    "challenges": [{
+            "type": "http-01",
+            "url": "https://acme-staging-v02.api.letsencrypt.org/acme/chall/xxx/L_O7xg",
+            "status": "invalid",
+            "validated": "2025-01-03T07:16:28Z",
+            "error": {
+                "type": "urn:ietf:params:acme:error:connection",
+                "detail": "0.0.0.0: Fetching http://uzz.fornari.net/.well-known/acme-challenge/xxx: Connection refused",
+                "status": 400
+            },
+            "token": "WMOhfI5w_j1QdSxpvrg2bem97R-ZO8BEIHlyPdcwH0w",
+            "validationRecord": [{
+                    "url": "http://uzz.fornari.net/.well-known/acme-challenge/xxx",
+                    "hostname": "example.com",
+                    "port": "80",
+                    "addressesResolved": ["0.0.0.0"],
+                    "addressUsed": "0.0.0.0"
+                }]
+        }]
+}

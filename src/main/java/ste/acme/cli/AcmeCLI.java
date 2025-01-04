@@ -55,8 +55,10 @@ import org.shredzone.acme4j.Authorization;
 import org.shredzone.acme4j.Certificate;
 import org.shredzone.acme4j.Login;
 import org.shredzone.acme4j.Order;
+import org.shredzone.acme4j.Problem;
 import org.shredzone.acme4j.Session;
 import org.shredzone.acme4j.Status;
+import org.shredzone.acme4j.challenge.Challenge;
 import org.shredzone.acme4j.challenge.Http01Challenge;
 import org.shredzone.acme4j.connector.Resource;
 import org.shredzone.acme4j.exception.AcmeException;
@@ -323,6 +325,7 @@ public class AcmeCLI {
         final AcmePreferences preferences, final Authorization auth, final Http01Challenge challenge
     ) throws AcmeException {
         final String CHALLENGE_PATH = "/.well-known/acme-challenge/" + challenge.getToken();
+        final EnumSet STILL_IN_PROGRESS = EnumSet.of(Status.PENDING, Status.PROCESSING);
         //
         // TODO: move to a ChallengeServer
         //
@@ -345,29 +348,40 @@ public class AcmeCLI {
             port = server.getAddress().getPort(); // if the port was 0 an available port has been randomly picked
             out("Listener started on port " + port);
             out("Acme-tools is now ready to respond to the CA challenge. The CA server will try");
-            System.out.printf("to connect to the URL http://%s%s\n", auth.getIdentifier().getDomain(), CHALLENGE_PATH);
+            out(String.format("to connect to the URL http://%s%s", auth.getIdentifier().getDomain(), CHALLENGE_PATH));
             out("Please make sure that the above URL is accessible from internet.");
 
             challenge.trigger();
 
             long pollingMillis = preferences.pollingInterval();
             long millisToWait = preferences.challengeTimeout().toMillis();
-            while ((millisToWait > 0) && EnumSet.of(Status.PENDING, Status.PROCESSING).contains(auth.getStatus())) {
+            out("waiting for " + millisToWait + ", checking every " + pollingMillis);
+            Status status = Status.UNKNOWN;
+            while ((millisToWait > 0) && STILL_IN_PROGRESS.contains(status = auth.getStatus())) {
                 out("Authorization status still processing");
                 auth.fetch();
                 try {
                     Thread.sleep(pollingMillis);
                     millisToWait -= pollingMillis;
                 } catch (InterruptedException x) {
+                    x.printStackTrace();
                     break;
                 }
             }
 
             server.stop(0);
 
-            if (auth.getStatus() != Status.VALID) {
+            status = auth.getStatus();
+            if (STILL_IN_PROGRESS.contains(status)) {
                 throw new AcmeException("no challenge received in " + preferences.challengeTimeout().toString().substring(2));
+            } else if (status != status.VALID) {
+                List<Challenge> list = auth.getChallenges();
+                Optional<Problem> problem = list.isEmpty() ? Optional.empty() : list.getFirst().getError();
+                throw new AcmeException(status.toString() + (problem.isPresent() ? " - " + problem.get() : ""));
             }
+            //
+            // Here the status of the challenge is VALID
+            //
         } catch (IOException x) {
             throw new AcmeException(x.getMessage(), x);
         }
